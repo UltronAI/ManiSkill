@@ -80,8 +80,15 @@ def main(args):
         viewer = env.render()
         viewer.paused = args.pause
         env.render()
+        
+    # print("EE Pose:", env.agent.controller.controllers['arm'].ee_pose)
+    # print("Base Pose:", env.agent.robot.get_links()[0].pose)
+    # print("EE Pose at base:", env.agent.controller.controllers['arm'].ee_pose_at_base)
+    # print("Target Pose:", env.agent.controller.controllers['arm']._target_pose)
     while True:
         action = env.action_space.sample()
+        print(action)
+        # import pdb; pdb.set_trace()
         obs, reward, terminated, truncated, info = env.step(action)
         if verbose:
             print("reward", reward)

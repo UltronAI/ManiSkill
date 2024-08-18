@@ -174,6 +174,7 @@ def solve(env: BaseEnv, debug=False, vis=False):
         #     pose = planner.grasp_pose_visual.pose
         #     planner.grasp_pose_visual.set_pose(pose * sapien.Pose(p=[0, +0.01, 0]))
         if execute_current_pose:
+            # import pdb; pdb.set_trace()
             # z-offset of end-effector gizmo to TCP position is hardcoded for the panda robot here
             result = planner.move_to_pose_with_screw(transform_window._gizmo_pose * sapien.Pose([0, 0, 0.102]), dry_run=True)
             if result != -1 and len(result["position"]) < 100:

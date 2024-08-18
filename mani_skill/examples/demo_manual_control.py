@@ -90,6 +90,8 @@ def main():
     has_gripper = any("gripper" in x for x in env.agent.controller.configs)
     gripper_action = 1
     EE_ACTION = 0.1
+    
+    import pdb; pdb.set_trace()
 
     while True:
         # -------------------------------------------------------------------------- #
@@ -97,8 +99,8 @@ def main():
         # -------------------------------------------------------------------------- #
         if args.enable_sapien_viewer:
             env.render_human()
-
-        render_frame = env.render().cpu().numpy()[0]
+        # import pdb; pdb.set_trace()
+        env.render()
 
         if after_reset:
             after_reset = False
@@ -111,7 +113,7 @@ def main():
         # Interaction
         # -------------------------------------------------------------------------- #
         # Input
-        renderer(render_frame)
+        # renderer(render_frame)
         # key = opencv_viewer.imshow(render_frame.cpu().numpy()[0])
         key = renderer.last_event.key if renderer.last_event is not None else None
         body_action = np.zeros([3])
@@ -194,6 +196,8 @@ def main():
                 gripper_action = 1
             elif key == "g":  # close gripper
                 gripper_action = -1
+                
+        import pdb; pdb.set_trace()
 
         # Other functions
         if key == "0":  # switch to SAPIEN viewer
