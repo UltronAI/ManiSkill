@@ -15,15 +15,9 @@ from mani_skill.utils.structs.pose import Pose
 
 
 def add_gripper_constraint(robot, scene):
-    outer_knuckle = next(
-        j for j in robot.get_active_joints() if j.name == "right_outer_knuckle_joint"
-    )
-    outer_finger = next(
-        j for j in robot.get_active_joints() if j.name == "right_inner_finger_joint"
-    )
-    inner_knuckle = next(
-        j for j in robot.get_active_joints() if j.name == "right_inner_knuckle_joint"
-    )
+    outer_knuckle = robot.active_joints_map["right_outer_knuckle_joint"]
+    outer_finger  = robot.active_joints_map["right_inner_finger_joint"]
+    inner_knuckle = robot.active_joints_map["right_inner_knuckle_joint"]
     pad = outer_finger.get_child_link()
     lif = inner_knuckle.get_child_link()
 
@@ -41,15 +35,9 @@ def add_gripper_constraint(robot, scene):
     right_drive.set_limit_y(low=0, high=0, stiffness=0, damping=0)
     right_drive.set_limit_z(low=0, high=0, stiffness=0, damping=0)
 
-    outer_knuckle = next(
-        j for j in robot.get_active_joints() if j.name == "left_outer_knuckle_joint"
-    )
-    outer_finger = next(
-        j for j in robot.get_active_joints() if j.name == "left_inner_finger_joint"
-    )
-    inner_knuckle = next(
-        j for j in robot.get_active_joints() if j.name == "left_inner_knuckle_joint"
-    )
+    outer_knuckle = robot.active_joints_map["left_outer_knuckle_joint"]
+    outer_finger  = robot.active_joints_map["left_inner_finger_joint"]
+    inner_knuckle = robot.active_joints_map["left_inner_knuckle_joint"]
     pad = outer_finger.get_child_link()
     lif = inner_knuckle.get_child_link()
 
@@ -118,7 +106,7 @@ class KinovaRobotiq(BaseAgent):
         "joint_7",
     ]
     gripper_joint_names = [
-        # "right_outer_knuckle_joint",
+        "right_outer_knuckle_joint",
         # "right_inner_finger_joint",
         # "right_inner_knuckle_joint",
         "left_outer_knuckle_joint",
@@ -230,8 +218,8 @@ class KinovaRobotiq(BaseAgent):
         # However, tune a good force limit to have a good mimic behavior
         gripper_pd_joint_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            lower=-0.01,  # a trick to have force when the object is thin
-            upper=0.04,
+            lower=0.0,  # a trick to have force when the object is thin
+            upper=0.068 + 0.01,
             stiffness=self.gripper_stiffness,
             damping=self.gripper_damping,
             force_limit=self.gripper_force_limit,

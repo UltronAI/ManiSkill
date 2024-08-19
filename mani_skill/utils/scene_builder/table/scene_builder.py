@@ -187,7 +187,6 @@ class TableSceneBuilder(SceneBuilder):
             self.env.agent.reset(qpos)
             self.env.agent.robot.set_pose(sapien.Pose([-0.8, 0, 0]))
         elif self.env.robot_uids == "kinova_robotiq":
-            import pdb; pdb.set_trace()
             qpos = np.array(
                 [
                     0.0,
@@ -208,6 +207,11 @@ class TableSceneBuilder(SceneBuilder):
             )
             self.env.agent.reset(qpos)
             self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
+        elif self.env.robot_uids == "robotiq":
+            qpos = np.array([0., 0., 0., 0., 0., 0.])
+            self.env.agent.reset(qpos)
+            self.env.agent.robot.set_pose(sapien.Pose(p=np.array([0, 0, 0.2]), 
+                                                      q=np.array([0.7071, 0, 0.7071, 0])))
         elif (
             "dclaw" in self.env.robot_uids
             or "allegro" in self.env.robot_uids

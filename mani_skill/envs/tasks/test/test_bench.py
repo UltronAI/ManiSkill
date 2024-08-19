@@ -3,7 +3,7 @@ from typing import Any, Dict, Union
 import numpy as np
 import torch
 
-from mani_skill.agents.robots import Panda, PandaStick, PandaWristCam, Xmate3Robotiq, Kinova, KinovaRobotiq
+from mani_skill.agents.robots import Panda, PandaStick, PandaWristCam, Xmate3Robotiq, Kinova, KinovaRobotiq, Robotiq
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
 from mani_skill.sensors.camera import CameraConfig
@@ -15,13 +15,13 @@ from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs.pose import Pose
 
 
-@register_env("TestBench-v1", max_episode_steps=50)
+@register_env("TestBench-v1", max_episode_steps=1000)
 class TestBench(BaseEnv):
     
-    SUPPORTED_ROBOTS = ["panda", "xmate3_robotiq", "kinova_robotiq", "kinova"]
-    agent: Union[Panda, Xmate3Robotiq, KinovaRobotiq, Kinova]
+    SUPPORTED_ROBOTS = ["panda", "xmate3_robotiq", "kinova_robotiq", "kinova", "robotiq"]
+    agent: Union[Panda, Xmate3Robotiq, KinovaRobotiq, Kinova, Robotiq]
     
-    def __init__(self, *args, robot_uids="kinova_robotiq", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="robotiq", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
         

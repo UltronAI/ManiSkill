@@ -2,7 +2,7 @@ import argparse
 
 import gymnasium as gym
 import numpy as np
-
+import torch
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.utils.wrappers import RecordEpisode
 
@@ -85,10 +85,11 @@ def main(args):
     # print("Base Pose:", env.agent.robot.get_links()[0].pose)
     # print("EE Pose at base:", env.agent.controller.controllers['arm'].ee_pose_at_base)
     # print("Target Pose:", env.agent.controller.controllers['arm']._target_pose)
+    
+    # env.agent.controller.controllers['gripper'].set_drive_targets(
+        torch.tensor([[0.5, 0.5]]))
     while True:
         action = env.action_space.sample()
-        print(action)
-        # import pdb; pdb.set_trace()
         obs, reward, terminated, truncated, info = env.step(action)
         if verbose:
             print("reward", reward)
