@@ -35,7 +35,7 @@ def add_gripper_constraint(robot, scene):
     right_drive.set_limit_y(low=0, high=0, stiffness=0, damping=0)
     right_drive.set_limit_z(low=0, high=0, stiffness=0, damping=0)
 
-    outer_knuckle = robot.active_joints_map["finger_joint"]
+    outer_knuckle = robot.active_joints_map["left_outer_knuckle_joint"]
     outer_finger  = robot.active_joints_map["left_inner_finger_joint"]
     inner_knuckle = robot.active_joints_map["left_inner_knuckle_joint"]
     pad = outer_finger.get_child_link()
@@ -55,55 +55,47 @@ def add_gripper_constraint(robot, scene):
     left_drive.set_limit_x(low=0, high=0, stiffness=0, damping=0)
     left_drive.set_limit_y(low=0, high=0, stiffness=0, damping=0)
     left_drive.set_limit_z(low=0, high=0, stiffness=0, damping=0)
-    
-    print("Done adding gripper constraint")
 
 
 @register_agent()
 class Robotiq(BaseAgent):
     uid = "robotiq"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/kinova/robotiq_2f_85/robotiq_85.urdf"
-    urdf_config = dict(
-        _materials=dict(
-            gripper=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0)
-        ),
-        link=dict(
-            finger_joint=dict(
-                material="gripper", patch_radius=0.1, min_patch_radius=0.1
-            ),
-            right_outer_knuckle=dict(
-                material="gripper", patch_radius=0.1, min_patch_radius=0.1
-            ),
-        ),
-    )
-    
-    keyframes = dict(
-        rest=Keyframe(
-            qpos=np.array(
-                [
-                    0.0, 0.0, 0.0, 0.0, 0.0, 0.0
-                ]
-            ),
-            pose=sapien.Pose(),
-        )
-    )
+    # urdf_config = dict(
+    #     _materials=dict(
+    #         gripper=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0)
+    #     ),
+    #     link=dict(
+    #         left_outer_knuckle_joint=dict(
+    #             material="gripper", patch_radius=0.1, min_patch_radius=0.1
+    #         ),
+    #         right_outer_knuckle=dict(
+    #             material="gripper", patch_radius=0.1, min_patch_radius=0.1
+    #         ),
+    #     ),
+    # )
     
     gripper_joint_names = [
-        "right_outer_knuckle_joint",
-        # "right_inner_finger_joint",
-        # "right_inner_knuckle_joint",
-        "finger_joint",
+        "left_outer_knuckle_joint",
+        # "left_inner_knuckle_joint",
         # "left_inner_finger_joint",
-        # "left_inner_knuckle_joint"
+        "right_outer_knuckle_joint",
+        # "right_outer_knuckle_joint",
+        # "right_outer_knuckle_joint",
+        # fixed joints
+        # "left_outer_finger_joint",
+        # "left_inner_finger_pad_joint",
+        # "right_outer_finger_joint",
+        # "right_inner_finger_pad_joint"
     ]
-    ee_link_name = "end_effector_link"
+    # ee_link_name = "end_effector_link"
     
     arm_stiffness = 1e3
     arm_damping = 1e2
     arm_force_limit = 100
     
-    gripper_stiffness = 1e3
-    gripper_damping = 1e2
+    gripper_stiffness = 1e4
+    gripper_damping = 2000
     gripper_force_limit = 0.1
     
     @property
@@ -115,8 +107,8 @@ class Robotiq(BaseAgent):
         # However, tune a good force limit to have a good mimic behavior
         gripper_pd_joint_pos = PDJointPosMimicControllerConfig(
             self.gripper_joint_names,
-            lower=0.0,  # a trick to have force when the object is thin
-            upper=0.8,
+            lower=0.05,  # a trick to have force when the object is thin
+            upper=0.7,
             stiffness=self.gripper_stiffness,
             damping=self.gripper_damping,
             force_limit=self.gripper_force_limit,

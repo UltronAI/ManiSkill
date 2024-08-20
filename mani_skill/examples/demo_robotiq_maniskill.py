@@ -80,25 +80,16 @@ def main(args):
         viewer = env.render()
         viewer.paused = args.pause
         env.render()
-        
+    
+    env.agent.controller.controllers['gripper'].set_drive_targets(torch.tensor([[0.5, 0.5]]))
     while True:
-        action = env.action_space.sample()
-        obs, reward, terminated, truncated, info = env.step(action)
-        if verbose:
-            print("reward", reward)
-            print("terminated", terminated)
-            print("truncated", truncated)
-            print("info", info)
-        if args.render_mode is not None:
-            env.render()
-
-        if args.render_mode is None or args.render_mode != "human":
-            if (terminated | truncated).any():
-                break
+        # action = env.action_space.sample()
+        # obs, reward, terminated, truncated, info = env.step(action)
+        
+        env.scene.update_render()
+        env.scene.step()
+        env.render()
     env.close()
-
-    if record_dir:
-        print(f"Saving video to {record_dir}")
 
 
 if __name__ == "__main__":

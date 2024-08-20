@@ -39,15 +39,15 @@ class TestBench(BaseEnv):
                                 near=0.01,
                                 far=100,)
         
-        head_cam_pose = sapien_utils.look_at(eye=[-0.615, 0, 0.5, ], target=[0.1, 0, 0])
-        head_cam = CameraConfig("head_camera",
-                                pose=head_cam_pose,
-                                width=128,
-                                height=128,
-                                fov=np.pi / 2,
-                                near=0.01,
-                                far=100,)
-        return [base_cam, head_cam]
+        # head_cam_pose = sapien_utils.look_at(eye=[-0.615, 0, 0.5, ], target=[0.1, 0, 0])
+        # head_cam = CameraConfig("head_camera",
+        #                         pose=head_cam_pose,
+        #                         width=128,
+        #                         height=128,
+        #                         fov=np.pi / 2,
+        #                         near=0.01,
+        #                         far=100,)
+        return [base_cam]
     
     @property
     def _default_human_render_camera_configs(self):
@@ -68,25 +68,25 @@ class TestBench(BaseEnv):
             env=self, robot_init_qpos_noise=self.robot_init_qpos_noise
         )
         self.table_scene.build()
-        self.cube_half_size = 0.05
-        self.cube = actors.build_cube(
-            self.scene,
-            half_size=self.cube_half_size,
-            color=[1, 0, 0, 1],
-            name="cube",
-        )
+        # self.cube_half_size = 0.05
+        # self.cube = actors.build_cube(
+        #     self.scene,
+        #     half_size=self.cube_half_size,
+        #     color=[1, 0, 0, 1],
+        #     name="cube",
+        # )
         
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
-            xyz = torch.zeros((b, 3))
-            xyz[:, 0] = -0.4
-            # ensure cube is spawned on the left side of the table
-            xyz[:, 1] = 0.0
-            xyz[:, 2] = self.cube_half_size
-            # qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
-            self.cube.set_pose(Pose.create_from_pq(xyz))
+            # xyz = torch.zeros((b, 3))
+            # xyz[:, 0] = -0.4
+            # # ensure cube is spawned on the left side of the table
+            # xyz[:, 1] = 0.0
+            # xyz[:, 2] = self.cube_half_size
+            # # qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
+            # self.cube.set_pose(Pose.create_from_pq(xyz))
 
     
     def compute_normalized_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):

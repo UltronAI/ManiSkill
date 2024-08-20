@@ -210,7 +210,7 @@ class TableSceneBuilder(SceneBuilder):
         elif self.env.robot_uids == "robotiq":
             qpos = np.array([0., 0., 0., 0., 0., 0.])
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose(p=np.array([0, 0, 0.2]), 
+            self.env.agent.robot.set_pose(sapien.Pose(p=np.array([0, 0, 0.5]), 
                                                       q=np.array([0.7071, 0, 0.7071, 0])))
         elif (
             "dclaw" in self.env.robot_uids

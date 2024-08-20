@@ -37,17 +37,15 @@ def add_gripper_constraint(robot, scene):
         - outer_knuckle.get_global_pose().p
     )
     T_fw = lif.pose.inv().to_transformation_matrix()
-    import pdb; pdb.set_trace()
     p_f = T_fw[:3, :3] @ p_w + T_fw[:3, 3]
     p_p = T_pw[:3, :3] @ p_w + T_pw[:3, 3]
-
     right_drive = scene.create_drive(lif, sapien.Pose(p_f), pad, sapien.Pose(p_p))
     right_drive.set_limit_x(low=0, high=0, stiffness=0, damping=0)
     right_drive.set_limit_y(low=0, high=0, stiffness=0, damping=0)
     right_drive.set_limit_z(low=0, high=0, stiffness=0, damping=0)
 
     outer_knuckle = next(
-        j for j in robot.get_active_joints() if j.name == "finger_joint"
+        j for j in robot.get_active_joints() if j.name == "left_outer_knuckle_joint"
     )
     outer_finger = next(
         j for j in robot.get_active_joints() if j.name == "left_inner_finger_joint"
@@ -74,7 +72,6 @@ def add_gripper_constraint(robot, scene):
     left_drive.set_limit_y(low=0, high=0, stiffness=0, damping=0)
     left_drive.set_limit_z(low=0, high=0, stiffness=0, damping=0)
 
-
 args = parse_args()
 engine = sapien.Engine()
 # import pdb; pdb.set_trace()
@@ -97,14 +94,14 @@ viewer.control_window.toggle_joint_axes(0)
 urdf_file = "../assets/robots/kinova/robotiq_2f_85/robotiq_85.urdf"
 loader = scene.create_urdf_loader()
 builder = loader.load_file_as_articulation_builder(urdf_file)
-import pdb; pdb.set_trace()
+
 # import pdb; pdb.set_trace()
 # Disable self collision for simplification
-for link_builder in builder.link_builders:
-    link_builder.collision_groups = [1, 1, 2, 0]
-robot = builder.build(fix_root_link=True)
-robot.set_pose(sapien.Pose(p=np.array([0.0, 0, 0]), q=np.array([0.7071, 0, 0.7071, 0])))
+# for link_builder in builder.link_builders:
+#     link_builder.collision_groups = [1, 1, 2, 0]
+robot = builder.build() #fix_root_link=True)
 robot.set_qpos(np.zeros([robot.dof]))
+robot.set_pose(sapien.Pose(p=np.array([0.0, 0, 0]), q=np.array([0.7071, 0, 0.7071, 0])))
 
 # MAdd constraints
 if args.model_constraint:
@@ -116,10 +113,10 @@ right_joint = next(
 )
 print(right_joint.name)
 right_joint.set_drive_property(1e4, 2000, 0.1)
-right_joint.set_drive_target(0.5)
+# right_joint.set_drive_target(0.5)
 
 left_joint = next(
-    j for j in robot.get_active_joints() if j.name == "finger_joint"
+    j for j in robot.get_active_joints() if j.name == "left_outer_knuckle_joint"
 )
 print(left_joint.name)
 left_joint.set_drive_property(1e4, 2000, 0.1) #(1e3, 1e2, 100)
