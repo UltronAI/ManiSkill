@@ -166,6 +166,18 @@ class TableSceneBuilder(SceneBuilder):
             agent.agents[0].robot.set_pose(
                 sapien.Pose([0, -0.75, 0], q=euler2quat(0, 0, np.pi / 2))
             )
+        elif self.env.robot_uids in ["kinova_dof6", "kinova_dof6_robotiq_2f85", "kinova_dof6_robotiq_2f140"]:
+            qpos = [0.0, 0.26, -2.27, 0, -0.61, 1.57] # arm
+            if "robotiq" in self.env.robot_uids:
+                qpos += [0, 0, 0, 0, 0, 0]
+            self.env.agent.reset(qpos)
+            self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
+        elif self.env.robot_uids in ["kinova_dof7", "kinova_dof7_robotiq_2f85", "kinova_dof7_robotiq_2f140"]:
+            qpos = [0.0, 0.26, 3.14, -2.27, 0, -0.61, 1.57]
+            if "robotiq" in self.env.robot_uids:
+                qpos += [0, 0, 0, 0, 0, 0]
+            self.env.agent.reset(qpos)
+            self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0])) 
         elif (
             "dclaw" in self.env.robot_uids
             or "allegro" in self.env.robot_uids
