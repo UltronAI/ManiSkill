@@ -15,11 +15,6 @@ from mani_skill.utils.structs.actor import Actor
 
 
 class KinovaBase(BaseAgent):
-    urdf_config = dict(
-        _materials=dict(
-            gripper=dict(static_friction=2.0, dynamic_friction=2.0, restitution=0.0)
-        ),
-    )
     ee_link_name = "end_effector_link"
     
     arm_stiffness = 1e3

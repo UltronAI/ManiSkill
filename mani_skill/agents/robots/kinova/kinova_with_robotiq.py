@@ -14,6 +14,10 @@ from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.structs.actor import Actor
 from .kinova import KinovaDoF6, KinovaDoF7
 
+"""
+EEF frame is LEFT-UP-FORWARD
+"""
+
 @register_agent()
 class KinovaDoF7Robotiq2f85(KinovaDoF7):
     uid = "kinova_dof7_robotiq_2f85"
@@ -142,7 +146,6 @@ class KinovaDoF7Robotiq2f85(KinovaDoF7):
         left_drive.set_limit_x(0, 0)
         left_drive.set_limit_y(0, 0)
         left_drive.set_limit_z(0, 0)
-
 
 
 @register_agent()

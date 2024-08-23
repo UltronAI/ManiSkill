@@ -3,13 +3,14 @@ from typing import Any, Dict, Union
 import numpy as np
 import torch
 
-from mani_skill.agents.robots import KinovaDoF7Robotiq2f85, KinovaDoF7Robotiq2f140
+from mani_skill.agents.robots import KinovaDoF7Robotiq2f85, KinovaDoF7Robotiq2f140, KinovaDoF7
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
 from mani_skill.sensors.camera import CameraConfig
 from mani_skill.utils import common, sapien_utils
 from mani_skill.utils.building import actors
 from mani_skill.utils.building.ground import build_ground
+from mani_skill.utils.geometry import rotation_conversions as rot_utils
 from mani_skill.utils.registration import register_env
 from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs.pose import Pose
@@ -18,10 +19,10 @@ from mani_skill.utils.structs.pose import Pose
 @register_env("TestBench-v1", max_episode_steps=1000)
 class TestBench(BaseEnv):
     
-    SUPPORTED_ROBOTS = ["kinova_dof7_robotiq_2f85"]
-    agent: Union[KinovaDoF7Robotiq2f85]
+    SUPPORTED_ROBOTS = ["kinova_dof7_robotiq_2f85" "kinova_dof7"]
+    agent: Union[KinovaDoF7Robotiq2f85, KinovaDoF7]
     
-    def __init__(self, *args, robot_uids="kinova_dof7_robotiq_2f85", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="kinova_dof7", robot_init_qpos_noise=0.02, **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
         
@@ -39,15 +40,15 @@ class TestBench(BaseEnv):
                                 near=0.01,
                                 far=100,)
         
-        # head_cam_pose = sapien_utils.look_at(eye=[-0.615, 0, 0.5, ], target=[0.1, 0, 0])
-        # head_cam = CameraConfig("head_camera",
-        #                         pose=head_cam_pose,
-        #                         width=128,
-        #                         height=128,
-        #                         fov=np.pi / 2,
-        #                         near=0.01,
-        #                         far=100,)
-        return [base_cam]
+        head_cam_pose = sapien_utils.look_at(eye=[-0.615, 0, 0.7], target=[0.1, 0, 0])
+        head_cam = CameraConfig("head_camera",
+                                pose=head_cam_pose,
+                                width=256,
+                                height=256,
+                                fov=np.pi / 2,
+                                near=0.01,
+                                far=100,)
+        return [base_cam, head_cam]
     
     @property
     def _default_human_render_camera_configs(self):
@@ -68,19 +69,54 @@ class TestBench(BaseEnv):
             env=self, robot_init_qpos_noise=self.robot_init_qpos_noise
         )
         self.table_scene.build()
-        # self.cube_half_size = 0.05
-        # self.cube = actors.build_cube(
-        #     self.scene,
-        #     half_size=self.cube_half_size,
-        #     color=[1, 0, 0, 1],
-        #     name="cube",
-        # )
-        
+        self.cube_half_size = 0.05
+        self.cube = actors.build_cube(
+            self.scene,
+            half_size=self.cube_half_size,
+            color=[1, 0, 0, 1],
+            name="cube",
+        )
+
     def _initialize_episode(self, env_idx: torch.Tensor, options: dict):
         with torch.device(self.device):
             b = len(env_idx)
             self.table_scene.initialize(env_idx)
 
+            xyz = torch.zeros((b, 3))
+            xyz[:, 0] = -0.2
+            xyz[:, 1] = 0.0
+            xyz[:, 2] = self.cube_half_size
+            # qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
+            self.cube.set_pose(Pose.create_from_pq(xyz))
+
+            assert hasattr(self.agent.controller.controllers["arm"], "kinematics"), "Only avaiable for EE controllers"
+
+            target_EE_p = self.cube.pose.p + torch.tensor([0.0, 0.0, 0.3])  # (n, 3)
+            target_EE_q = rot_utils.rpy_to_quaternion(
+                torch.tensor([np.pi, 0.0, np.pi/2])).repeat(len(env_idx), 1)  # (n, 4)
+            # target_EE_q = rot_utils.rpy_to_quaternion(
+            #     torch.tensor([-np.pi/2, np.pi, 0.0])).repeat(len(env_idx), 1)  # (n, 4)
+            target_EE_pose = Pose.create_from_pq(p=target_EE_p, q=target_EE_q)
+
+            base_pose = self.agent.controller.controllers["arm"].articulation.pose
+            world2base = Pose.create(base_pose.raw_pose[env_idx]).inv()
+            target_EE_pose_at_base = world2base * target_EE_pose
+
+            q0 = self.agent.controller.controllers["arm"].articulation.get_qpos()[env_idx]
+
+            qpos = self.agent.controller.controllers["arm"].kinematics.compute_ik(
+                target_pose=target_EE_pose_at_base,
+                q0=q0,
+            )  # (n, 6)
+            if qpos is None:
+                raise ValueError("IK solution not found")
+
+            # gripper_qpos = torch.zeros(
+            #     (len(env_idx), 6), device=self.device)
+            # init_qpos = torch.cat(
+            #     [qpos, gripper_qpos], dim=-1)
+            self.agent.reset(init_qpos=qpos)
+
+
     def compute_normalized_dense_reward(self, obs: Any, action: torch.Tensor, info: Dict):
         return 
-    

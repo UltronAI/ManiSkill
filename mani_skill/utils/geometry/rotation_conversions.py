@@ -41,6 +41,25 @@ e.g.
 """
 
 
+def rpy_to_quaternion(euler: torch.Tensor) -> torch.Tensor:
+    r, p, y = torch.unbind(euler, dim=-1)
+    cy = torch.cos(y * 0.5)
+    sy = torch.sin(y * 0.5)
+    cp = torch.cos(p * 0.5)
+    sp = torch.sin(p * 0.5)
+    cr = torch.cos(r * 0.5)
+    sr = torch.sin(r * 0.5)
+
+    qw = cr * cp * cy + sr * sp * sy
+    qx = sr * cp * cy - cr * sp * sy
+    qy = cr * sp * cy + sr * cp * sy
+    qz = cr * cp * sy - sr * sp * cy
+
+    quaternion = torch.stack([qw, qx, qy, qz], dim=-1)
+
+    return standardize_quaternion(quaternion)
+
+
 def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     """
     Convert rotations given as quaternions to rotation matrices.
