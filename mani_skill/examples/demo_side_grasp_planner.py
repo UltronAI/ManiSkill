@@ -9,7 +9,8 @@ from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.utils.geometry import rotation_conversions as rot_utils
 from mani_skill.utils.structs.pose import Pose
 from mani_skill.utils.wrappers import RecordEpisode
-from mani_skill.utils.motion_helper import generate_trajectory #, compute_delta_pose, visualize_trajectory
+from mani_skill.utils.motion_helper import generate_trajectory
+from mani_skill.examples.motionplanning.panda.motionplanner import PandaArmMotionPlanningSolver
 import time
 
 def parse_args(args=None):
@@ -132,7 +133,7 @@ def main(args):
         if args.demo == "grasp_bottle":
             # Demo: grasp bottle
             # keypoint 1:
-            cube_pos = env.cube.pose.p
+            cube_pos = env.unwrapped.cube.pose.p
             pos1 = cube_pos + torch.tensor([0.0, 0.0, 0.5])
             quat1 = rot_utils.euler_angles_to_quaternion(
                 torch.tensor([np.pi, 0.0, 0.0]), "XYZ").repeat(args.num_envs, 1)  # (n, 4)
@@ -156,7 +157,7 @@ def main(args):
             keyposes += [pose2, pose3, pose4]
         elif args.demo == "open_door":
             # Demo: open door
-            door_pos = env.cube.pose.p + torch.tensor([0.1, 0.0, 0.4])
+            door_pos = env.unwrapped.cube.pose.p + torch.tensor([0.1, 0.0, 0.4])
             # keypoint 1:
             pos1 = door_pos + torch.tensor([0.0, 0.1, 0.0])
             quat1 = rot_utils.euler_angles_to_quaternion(
@@ -184,7 +185,7 @@ def main(args):
         if args.demo == "grasp_bottle":
             # Demo: grasp bottle
             # keypoint 1:
-            cube_pos = env.cube.pose.p
+            cube_pos = env.unwrapped.cube.pose.p
             pos1 = cube_pos + torch.tensor([0.0, 0.0, 0.5])
             quat1 = rot_utils.euler_angles_to_quaternion(
                 torch.tensor([np.pi, 0.0, -np.pi/2]), "XYZ").repeat(args.num_envs, 1)  # (n, 4)
@@ -208,7 +209,7 @@ def main(args):
             keyposes += [pose2, pose3, pose4]
         elif args.demo == "open_door":
             # Demo: open door
-            door_pos = env.cube.pose.p + torch.tensor([0.1, 0.0, 0.4])
+            door_pos = env.unwrapped.cube.pose.p + torch.tensor([0.1, 0.0, 0.4])
             # keypoint 1:
             pos1 = door_pos + torch.tensor([0.0, -0.1, 0.0])
             quat1 = rot_utils.euler_angles_to_quaternion(
@@ -232,39 +233,34 @@ def main(args):
             keyposes += [pose1, pose2, pose3, pose4]
         else:
             raise ValueError(f"Unknown demo: {args.demo}")
-    
+        
     trajectory = generate_trajectory(keyposes, 5)
+    
+    planner = PandaArmMotionPlanningSolver(
+        env,
+        debug=True,
+        vis=True,
+        base_pose=env.unwrapped.agent.robot.pose,
+        visualize_target_grasp_pose=True,
+        print_env_info=False,
+        joint_acc_limits=0.5,
+        joint_vel_limits=0.5,
+    )
     
     count = 0
     
-    current_ee_pose = env.agent.controller.controllers["arm"].ee_pose
-    delta_pose = compute_delta_pose(current_ee_pose, trajectory[count])
-    delta_action = torch.cat([delta_pose, torch.zeros([args.num_envs, 1])], dim=-1)
-    env.step(delta_action)
-
+    for i in range(len(trajectory)):
+        result = planner.move_to_pose_with_RRTConnect(trajectory[i].sp, dry_run=False)
+        if result != -1 and len(result["position"]) < 100:
+            _, reward, _ ,_, info = planner.follow_path(result)
+            print(f"Reward: {reward}, Info: {info}")
+        else:
+            if result == -1: print("Plan failed")
+            else: print("Generated motion plan was too long. Try a closer sub-goal")
+        execute_current_pose = False
+    
     while True:
-        print("Towards pose #", count, trajectory[count], "...")
-        current_ee_pose = env.agent.controller.controllers["arm"].ee_pose
-        delta_pose = compute_delta_pose(current_ee_pose, trajectory[count])
-        delta_action = torch.cat([delta_pose, torch.zeros([args.num_envs, 1])], dim=-1)
-
-        if delta_pose.norm() < 1e-1:
-            print("!!!!! Move to the next pose: #", count)
-            count += 1
-            if count >= len(trajectory):
-                break
-            delta_pose = compute_delta_pose(current_ee_pose, trajectory[count])
-            delta_action = torch.cat([delta_pose, torch.zeros([args.num_envs, 1])], dim=-1)
-            # env.step(delta_action)
-            
-        obs, reward, terminated, truncated, info = env.step(delta_action)
-        # env.scene.step()
-        
-        if args.render_mode is not None:
-            env.render()
-            
-        time.sleep(0.01)
-        
+        pass
     env.close()
 
     if args.record_video:

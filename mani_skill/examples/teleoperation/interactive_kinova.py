@@ -96,6 +96,7 @@ def solve(env: BaseEnv, debug=False, vis=False):
     ], env.unwrapped.control_mode
     planner = PandaArmMotionPlanningSolver(
         env,
+        new_package_keyword="kortex_description",
         debug=debug,
         vis=vis,
         base_pose=env.unwrapped.agent.robot.pose,
@@ -187,7 +188,7 @@ def parse_args():
     parser = argparse.ArgumentParser()
     parser.add_argument("-e", "--env-id", type=str, default="PickCube-v1")
     parser.add_argument("-o", "--obs-mode", type=str, default="none")
-    parser.add_argument("-r", "--robot-uid", type=str, default="panda", help="Robot setups supported are ['panda']")
+    parser.add_argument("-r", "--robot-uid", type=str, default="kinova_dof6_robotiq_2f85", help="Robot setups supported are ['panda']")
     parser.add_argument("--record-dir", type=str, default="demos")
     args, opts = parser.parse_known_args()
 

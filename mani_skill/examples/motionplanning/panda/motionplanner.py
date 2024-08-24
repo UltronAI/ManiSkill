@@ -18,6 +18,7 @@ class PandaArmMotionPlanningSolver:
         env: BaseEnv,
         debug: bool = False,
         vis: bool = True,
+        new_package_keyword: str = "",
         base_pose: sapien.Pose = None,  # TODO mplib doesn't support robot base being anywhere but 0
         visualize_target_grasp_pose: bool = True,
         print_env_info: bool = True,
@@ -66,15 +67,16 @@ class PandaArmMotionPlanningSolver:
                 break
             self.base_env.render_human()
 
-    def setup_planner(self):
+    def setup_planner(self, new_package_keyword: str = ""):
         link_names = [link.get_name() for link in self.robot.get_links()]
         joint_names = [joint.get_name() for joint in self.robot.get_active_joints()]
         planner = mplib.Planner(
             urdf=self.env_agent.urdf_path,
             srdf=self.env_agent.urdf_path.replace(".urdf", ".srdf"),
+            new_package_keyword=new_package_keyword,
             user_link_names=link_names,
             user_joint_names=joint_names,
-            move_group="panda_hand_tcp",
+            move_group=self.env_agent.ee_link_name,
             joint_vel_limits=np.ones(7) * self.joint_vel_limits,
             joint_acc_limits=np.ones(7) * self.joint_acc_limits,
         )

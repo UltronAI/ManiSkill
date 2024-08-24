@@ -59,6 +59,8 @@ class TableSceneBuilder(SceneBuilder):
         self.table.set_pose(
             sapien.Pose(p=[-0.12, 0, -self.table_height], q=euler2quat(0, 0, np.pi / 2))
         )
+        init_pos = [-0.615, -0.3, 0.2]
+        init_euler = [np.pi/4, np.pi/4, 0]
         if self.env.robot_uids == "panda":
             qpos = np.array(
                 [
@@ -81,7 +83,7 @@ class TableSceneBuilder(SceneBuilder):
             )
             qpos[:, -2:] = 0.04
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose([-0.615, 0, 0]))
+            self.env.agent.robot.set_pose(sapien.Pose(p=init_pos, q=euler2quat(*init_euler)))
         elif self.env.robot_uids == "panda_wristcam":
             # fmt: off
             qpos = np.array(
@@ -96,7 +98,7 @@ class TableSceneBuilder(SceneBuilder):
             )
             qpos[:, -2:] = 0.04
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose(p=[-0.615, -0.3, 0.2], q=euler2quat(np.pi/4, 0, 0)))
+            self.env.agent.robot.set_pose(sapien.Pose(p=init_pos, q=euler2quat(*init_euler)))
         elif self.env.robot_uids == "xmate3_robotiq":
             qpos = np.array(
                 [0, np.pi / 6, 0, np.pi / 3, 0, np.pi / 2, -np.pi / 2, 0, 0]
@@ -171,13 +173,13 @@ class TableSceneBuilder(SceneBuilder):
             if "robotiq" in self.env.robot_uids:
                 qpos += [0, 0, 0, 0, 0, 0]
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose(p=[-0.615, -0.3, 0.2], q=euler2quat(np.pi/4, 0, 0)))
+            self.env.agent.robot.set_pose(sapien.Pose(p=init_pos, q=euler2quat(*init_euler)))
         elif self.env.robot_uids in ["kinova_dof7", "kinova_dof7_robotiq_2f85", "kinova_dof7_robotiq_2f140"]:
             qpos = [0.0, 0.26, 3.14, -2.27, 0, -0.61, 1.57]
             if "robotiq" in self.env.robot_uids:
                 qpos += [0, 0, 0, 0, 0, 0]
             self.env.agent.reset(qpos)
-            self.env.agent.robot.set_pose(sapien.Pose(p=[-0.615, -0.3, 0.2], q=euler2quat(np.pi/4, 0, 0))) 
+            self.env.agent.robot.set_pose(sapien.Pose(p=init_pos, q=euler2quat(*init_euler))) 
         elif (
             "dclaw" in self.env.robot_uids
             or "allegro" in self.env.robot_uids

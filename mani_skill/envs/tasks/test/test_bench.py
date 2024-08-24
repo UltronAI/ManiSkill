@@ -90,7 +90,9 @@ class TestBench(BaseEnv):
             # qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
             self.cube.set_pose(Pose.create_from_pq(xyz))
 
-            assert hasattr(self.agent.controller.controllers["arm"], "kinematics"), "Only avaiable for EE controllers"
+            if not hasattr(self.agent.controller.controllers["arm"], "kinematics"):
+                return
+            # assert hasattr(self.agent.controller.controllers["arm"], "kinematics"), "Only avaiable for EE controllers"
             
             # if "panda" in self.robot_uids:
             #     euler_offset = rot_utils.euler_angles_to_quaternion(torch.tensor([0.0, 0.0, np.pi/2]))
