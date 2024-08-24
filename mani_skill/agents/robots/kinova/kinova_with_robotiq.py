@@ -149,7 +149,7 @@ class KinovaDoF7Robotiq2f85(KinovaDoF7):
 
 
 @register_agent()
-class KinovaDoF7Robotiq2f140(KinovaDoF7):
+class KinovaDoF7Robotiq2f140(KinovaDoF7Robotiq2f85):
     uid = "kinova_dof7_robotiq_2f140"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/kinova/gen3_dof7_robotiq_2f_140.urdf"
     keyframes = dict(
@@ -162,7 +162,7 @@ class KinovaDoF7Robotiq2f140(KinovaDoF7):
 
 
 @register_agent()
-class KinovaDoF6Robotiq2f85(KinovaDoF6):
+class KinovaDoF6Robotiq2f85(KinovaDoF7Robotiq2f85):
     uid = "kinova_dof6_robotiq_2f85"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/kinova/gen3_dof6_robotiq_2f_85.urdf"
     keyframes = dict(
@@ -172,10 +172,12 @@ class KinovaDoF6Robotiq2f85(KinovaDoF6):
             pose=sapien.Pose()
         )
     )
+    arm_joint_names = [f"joint_{i+1}" for i in range(6)]
+
 
 
 @register_agent()
-class KinovaDoF6Robotiq2f140(KinovaDoF6):
+class KinovaDoF6Robotiq2f140(KinovaDoF7Robotiq2f85):
     uid = "kinova_dof6_robotiq_2f140"
     urdf_path = f"{PACKAGE_ASSET_DIR}/robots/kinova/gen3_dof6_robotiq_2f_140.urdf"
     keyframes = dict(
@@ -185,4 +187,6 @@ class KinovaDoF6Robotiq2f140(KinovaDoF6):
             pose=sapien.Pose()
         )
     )
+    arm_joint_names = [f"joint_{i+1}" for i in range(6)]
+
 

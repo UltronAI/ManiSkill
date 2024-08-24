@@ -585,8 +585,8 @@
     <origin rpy="2.2957963267948966 0 3.141592653589793" xyz="0 0.030601 0.054905"/>
     <parent link="robotiq_arg2f_base_link"/>
     <child link="right_outer_knuckle"/>
-    <axis xyz="1 0 0"/>
-    <limit effort="1000" lower="-0.725" upper="0" velocity="2.0"/>
+    <axis xyz="-1 0 0"/>
+    <limit effort="1000" lower="0" upper="0.725" velocity="2.0"/>
     <!-- <mimic joint="left_outer_knuckle_joint" multiplier="-1" offset="0"/> -->
   </joint>
   <joint name="right_outer_finger_joint" type="fixed">

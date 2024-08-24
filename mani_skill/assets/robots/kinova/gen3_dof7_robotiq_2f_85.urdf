@@ -284,7 +284,7 @@
         <mesh filename="kortex_description/grippers/robotiq_2f_85/meshes/visual/robotiq_arg2f_85_base_link.dae" scale="0.001 0.001 0.001"/>
         <!-- <mesh filename="kortex_description/grippers/robotiq_2f_85/meshes/collision/robotiq_arg2f_base_link.stl"/> -->
       </geometry>
-      <material name="">
+      <material name="gray">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
@@ -331,7 +331,7 @@
       <geometry>
         <mesh filename="kortex_description/grippers/robotiq_2f_85/meshes/visual/robotiq_arg2f_85_outer_finger.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="">
+      <material name="gray">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
@@ -379,9 +379,6 @@
       <geometry>
         <box size="0.022 0.00635 0.0375"/>
       </geometry>
-      <material name="">
-        <color rgba="0.9 0.0 0.0 1"/>
-      </material>
     </collision>
   </link>
   <link name="left_inner_knuckle">
@@ -395,7 +392,7 @@
       <geometry>
         <mesh filename="kortex_description/grippers/robotiq_2f_85/meshes/visual/robotiq_arg2f_85_inner_knuckle.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="">
+      <material name="gray">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
@@ -417,7 +414,7 @@
       <geometry>
         <mesh filename="kortex_description/grippers/robotiq_2f_85/meshes/visual/robotiq_arg2f_85_outer_knuckle.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="">
+      <material name="outer_knuckle">
         <color rgba="0.792156862745098 0.819607843137255 0.933333333333333 1"/>
       </material>
     </visual>
@@ -461,7 +458,7 @@
       <geometry>
         <mesh filename="kortex_description/grippers/robotiq_2f_85/meshes/visual/robotiq_arg2f_85_inner_finger.dae" scale="0.001 0.001 0.001"/>
       </geometry>
-      <material name="">
+      <material name="gray">
         <color rgba="0.1 0.1 0.1 1"/>
       </material>
     </visual>
@@ -478,7 +475,7 @@
       <geometry>
         <box size="0.022 0.00635 0.0375"/>
       </geometry>
-      <material name="">
+      <material name="white">
         <color rgba="0.9 0.9 0.9 1"/>
       </material>
     </visual>
@@ -487,9 +484,6 @@
       <geometry>
         <box size="0.022 0.00635 0.0375"/>
       </geometry>
-      <material name="">
-        <color rgba="0.9 0.0 0.0 1"/>
-      </material>
     </collision>
   </link>
   <link name="right_inner_knuckle">

@@ -318,7 +318,7 @@ class RecordEpisode(gym.Wrapper):
             return self._save_video
 
     def capture_image(self):
-        img = self.env.render()
+        img = self.env.render_rgb_array()
         img = common.to_numpy(img)
         if len(img.shape) > 3:
             if len(img) == 1:

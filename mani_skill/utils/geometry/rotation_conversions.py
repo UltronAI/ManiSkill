@@ -41,25 +41,6 @@ e.g.
 """
 
 
-def rpy_to_quaternion(euler: torch.Tensor) -> torch.Tensor:
-    r, p, y = torch.unbind(euler, dim=-1)
-    cy = torch.cos(y * 0.5)
-    sy = torch.sin(y * 0.5)
-    cp = torch.cos(p * 0.5)
-    sp = torch.sin(p * 0.5)
-    cr = torch.cos(r * 0.5)
-    sr = torch.sin(r * 0.5)
-
-    qw = cr * cp * cy + sr * sp * sy
-    qx = sr * cp * cy - cr * sp * sy
-    qy = cr * sp * cy + sr * cp * sy
-    qz = cr * cp * sy - sr * sp * cy
-
-    quaternion = torch.stack([qw, qx, qy, qz], dim=-1)
-
-    return standardize_quaternion(quaternion)
-
-
 def quaternion_to_matrix(quaternions: torch.Tensor) -> torch.Tensor:
     """
     Convert rotations given as quaternions to rotation matrices.
@@ -242,6 +223,21 @@ def euler_angles_to_matrix(euler_angles: torch.Tensor, convention: str) -> torch
     return torch.matmul(torch.matmul(matrices[0], matrices[1]), matrices[2])
 
 
+def euler_angles_to_quaternion(euler_angles: torch.Tensor, convention: str = "XYZ") -> torch.Tensor:
+    """
+    Convert rotations given as Euler angles in radians to quaternions.
+
+    Args:
+        euler_angles: Euler angles in radians as tensor of shape (..., 3).
+        convention: Convention string of three uppercase letters from
+            {"X", "Y", and "Z"}.
+
+    Returns:
+        quaternions with real part first, as tensor of shape (..., 4).
+    """
+    return matrix_to_quaternion(euler_angles_to_matrix(euler_angles, convention))
+
+
 def _angle_from_tan(
     axis: str, other_axis: str, data, horizontal: bool, tait_bryan: bool
 ) -> torch.Tensor:
@@ -325,6 +321,21 @@ def matrix_to_euler_angles(matrix: torch.Tensor, convention: str) -> torch.Tenso
         ),
     )
     return torch.stack(o, -1)
+
+
+def quaternion_to_euler_angles(quaternions: torch.Tensor, convention: str) -> torch.Tensor:
+    """
+    Convert rotations given as quaternions to Euler angles in radians.
+
+    Args:
+        quaternions: quaternions with real part first,
+            as tensor of shape (..., 4).
+        convention: Convention string of three uppercase letters.
+
+    Returns:
+        Euler angles in radians as tensor of shape (..., 3).
+    """
+    return matrix_to_euler_angles(quaternion_to_matrix(quaternions), convention)
 
 
 def random_quaternions(

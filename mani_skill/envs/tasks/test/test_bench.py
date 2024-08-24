@@ -3,7 +3,7 @@ from typing import Any, Dict, Union
 import numpy as np
 import torch
 
-from mani_skill.agents.robots import KinovaDoF7Robotiq2f85, KinovaDoF7Robotiq2f140, KinovaDoF7
+from mani_skill.agents.robots import KinovaDoF7Robotiq2f85, KinovaDoF7, PandaWristCam, KinovaDoF6Robotiq2f85
 from mani_skill.envs.sapien_env import BaseEnv
 from mani_skill.envs.utils import randomization
 from mani_skill.sensors.camera import CameraConfig
@@ -16,14 +16,15 @@ from mani_skill.utils.scene_builder.table import TableSceneBuilder
 from mani_skill.utils.structs.pose import Pose
 
 
-@register_env("TestBench-v1", max_episode_steps=1000)
+@register_env("TestBench-v1", max_episode_steps=5000)
 class TestBench(BaseEnv):
     
-    SUPPORTED_ROBOTS = ["kinova_dof7_robotiq_2f85" "kinova_dof7"]
-    agent: Union[KinovaDoF7Robotiq2f85, KinovaDoF7]
+    SUPPORTED_ROBOTS = ["kinova_dof7_robotiq_2f85" "kinova_dof7", "panda_wristcam", "kinova_dof6_robotiq_2f85"]
+    agent: Union[KinovaDoF7Robotiq2f85, KinovaDoF7, PandaWristCam]
     
-    def __init__(self, *args, robot_uids="kinova_dof7", robot_init_qpos_noise=0.02, **kwargs):
+    def __init__(self, *args, robot_uids="kinova_dof7_robotiq_2f85", robot_init_qpos_noise=0.02, init_mode="up", **kwargs):
         self.robot_init_qpos_noise = robot_init_qpos_noise
+        self.init_mode = init_mode
         super().__init__(*args, robot_uids=robot_uids, **kwargs)
         
     # Specify default simulation/gpu memory configurations to override any default values
@@ -69,10 +70,10 @@ class TestBench(BaseEnv):
             env=self, robot_init_qpos_noise=self.robot_init_qpos_noise
         )
         self.table_scene.build()
-        self.cube_half_size = 0.05
-        self.cube = actors.build_cube(
+        self.cube_half_sizes = [0.03, 0.07, 0.05]
+        self.cube = actors.build_box(
             self.scene,
-            half_size=self.cube_half_size,
+            half_sizes=self.cube_half_sizes,
             color=[1, 0, 0, 1],
             name="cube",
         )
@@ -85,20 +86,43 @@ class TestBench(BaseEnv):
             xyz = torch.zeros((b, 3))
             xyz[:, 0] = -0.2
             xyz[:, 1] = 0.0
-            xyz[:, 2] = self.cube_half_size
+            xyz[:, 2] = self.cube_half_sizes[-1]
             # qs = randomization.random_quaternions(b, lock_x=True, lock_y=True)
             self.cube.set_pose(Pose.create_from_pq(xyz))
 
             assert hasattr(self.agent.controller.controllers["arm"], "kinematics"), "Only avaiable for EE controllers"
+            
+            # if "panda" in self.robot_uids:
+            #     euler_offset = rot_utils.euler_angles_to_quaternion(torch.tensor([0.0, 0.0, np.pi/2]))
+            # else:
+            #     euler_offset = rot_utils.euler_angles_to_quaternion(torch.tensor([0.0, 0.0, 0.0]))
 
-            target_EE_p = self.cube.pose.p + torch.tensor([0.0, 0.0, 0.3])  # (n, 3)
-            target_EE_q = rot_utils.rpy_to_quaternion(
-                torch.tensor([np.pi, 0.0, np.pi/2])).repeat(len(env_idx), 1)  # (n, 4)
-            # target_EE_q = rot_utils.rpy_to_quaternion(
-            #     torch.tensor([-np.pi/2, np.pi, 0.0])).repeat(len(env_idx), 1)  # (n, 4)
+            # if "panda" in self.robot_uids:
+            #     raise NotImplementedError("Only available for kinova_dof7_robotiq_2f85 and kinova_dof7")
+            # else:
+            if "panda" in self.robot_uids:
+                offset = np.pi/2
+            else:
+                offset = 0.0
+            if self.init_mode == "up":
+                target_EE_p = self.cube.pose.p + torch.tensor([0.0, 0.0, 0.3])
+                target_EE_q = rot_utils.euler_angles_to_quaternion(
+                    torch.tensor([np.pi, 0.0, -np.pi/2 + offset]), "XYZ").repeat(len(env_idx), 1)  # (n, 4)
+            elif self.init_mode == "side":
+                target_EE_p = self.cube.pose.p + torch.tensor([0.0, -0.3, 0.05])  # (n, 3)
+                target_EE_q = rot_utils.euler_angles_to_quaternion(
+                    torch.tensor([-np.pi/2, 0.0, -np.pi + offset]), "XYZ").repeat(len(env_idx), 1)
+            elif self.init_mode == "forward":
+                target_EE_p = self.cube.pose.p + torch.tensor([0.0, 0.0, 0.3])
+                target_EE_q = rot_utils.euler_angles_to_quaternion(
+                    torch.tensor([0.0, np.pi/2, np.pi/2 + offset]), "XYZ").repeat(len(env_idx), 1)
+            else:
+                raise ValueError(f"Unknown init_mode: {self.init_mode}")
+            
             target_EE_pose = Pose.create_from_pq(p=target_EE_p, q=target_EE_q)
 
             base_pose = self.agent.controller.controllers["arm"].articulation.pose
+            print("Initial base pose: ", base_pose)
             world2base = Pose.create(base_pose.raw_pose[env_idx]).inv()
             target_EE_pose_at_base = world2base * target_EE_pose
 
@@ -110,11 +134,11 @@ class TestBench(BaseEnv):
             )  # (n, 6)
             if qpos is None:
                 raise ValueError("IK solution not found")
-
-            # gripper_qpos = torch.zeros(
-            #     (len(env_idx), 6), device=self.device)
-            # init_qpos = torch.cat(
-            #     [qpos, gripper_qpos], dim=-1)
+            
+            curr_full_qpos = self.agent.robot.get_qpos()
+            if curr_full_qpos.shape[-1] > qpos.shape[-1]:
+                rest_qpos = torch.zeros((b, curr_full_qpos.shape[-1] - qpos.shape[-1]))
+                qpos = torch.cat([qpos, rest_qpos], dim=-1)
             self.agent.reset(init_qpos=qpos)
 
 
